@@ -197,7 +197,7 @@
       border-radius: 2.4rem; overflow: hidden;
       background: var(--surface);
     }
-    .image-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s ease; }
+    .image-frame img { width: 100%; height: 100%; object-fit: contain; display: block; transition: transform .6s ease; background: #ffffff; padding: 1.5rem; }
     .image-rgb-wrap:hover .image-frame img { transform: scale(1.03); }
     .image-frame::after {
       content: ''; position: absolute; inset: 0;
@@ -295,7 +295,6 @@
       <div class="image-rgb-wrap">
         <div class="image-frame">
           <!--  Replace src with your QR image e.g. src="qr.png"  -->
-          
           <img
             src="1.png"
             alt="EIDI — replace with your QR image"
@@ -334,7 +333,7 @@
     { name:'Rahim Bhai',  amount:'৳500',    type:'Taka',    emoji:'💸' },
     { name:'Sadia Apu',   amount:'৳1,000',  type:'Eidi',    emoji:'🤑' },
     { name:'Jamal Uncle', amount:'৳200',    type:'Taka',    emoji:'😂' },
-    { name:'Mitu',        amount:'৳750',    type:'Eidi',    emoji:'🎉' },
+    { name:'Mitu',        amount:'৳350',    type:'Eidi',    emoji:'🎉' },
     { name:'Rafi',        amount:'৳100',    type:'Biscuit', emoji:'🍪' },
     { name:'Nana Dadu',   amount:'৳5,000',  type:'Eidi',    emoji:'👴💰'},
     { name:'Chacha Jan',  amount:'৳300',    type:'Taka',    emoji:'🕌' },
