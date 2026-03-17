@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>EIDI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Unbounded:wght@300;400;700;900&family=DM+Sans:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:      #060609;
+      --surface: #0d0d14;
+      --accent:  #7b5cfa;
+      --accent2: #e05cfa;
+      --gold:    #f5c842;
+      --green:   #4ade80;
+      --text:    #eeeef5;
+      --muted:   #7a7a99;
+      --border:  rgba(123,92,250,.18);
+    }
+
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: 'DM Sans', sans-serif; overflow-x: hidden; }
+
+    #bg-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+
+    .noise {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: .035;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 200px;
+    }
+
+    .hero { position: relative; z-index: 2; min-height: 100dvh; display: flex; flex-direction: column; }
+
+    /* ── NAV ── */
+    nav { display: flex; align-items: center; justify-content: center; padding: 2rem 4rem; }
+    .logo {
+      font-family: 'Unbounded', sans-serif; font-weight: 900; font-size: 1.4rem; letter-spacing: .08em;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+
+    /* ── HERO BODY ── */
+    .hero-body {
+      flex: 1; display: grid; grid-template-columns: 1fr 1fr;
+      align-items: center; gap: 4rem;
+      padding: 0 4rem 2rem; max-width: 1400px; width: 100%; margin: 0 auto;
+    }
+
+    /* ── MOON IMAGE ── */
+    .moon-img-wrap {
+      animation: fadeUp .6s ease both;
+      width: fit-content;
+    }
+    .moon-img-wrap img {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid var(--border);
+      box-shadow: 0 0 24px rgba(123,92,250,.35), 0 0 6px rgba(245,200,66,.2);
+      display: block;
+      transition: transform .5s ease, box-shadow .5s ease;
+    }
+    .moon-img-wrap img:hover {
+      transform: scale(1.08) rotate(6deg);
+      box-shadow: 0 0 36px rgba(123,92,250,.55), 0 0 12px rgba(245,200,66,.35);
+    }
+
+    /* ── LEFT ── */
+    .hero-left { display: flex; flex-direction: column; gap: 1.8rem; }
+
+    .badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      padding: .4rem 1rem; border-radius: 999px;
+      border: 1px solid var(--border); background: rgba(123,92,250,.07);
+      font-size: .75rem; letter-spacing: .08em; color: var(--accent);
+      width: fit-content; animation: fadeUp .7s ease both;
+    }
+    .badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.4;transform:scale(.7)} }
+
+    .hero-heading {
+      font-family: 'Unbounded', sans-serif; font-weight: 900;
+      font-size: clamp(2rem, 4.5vw, 4.4rem);
+      line-height: 1.08; letter-spacing: -.03em;
+      animation: fadeUp .8s .1s ease both;
+    }
+    .hero-heading .line { display: block; }
+    .hero-heading .gradient-word {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 60%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+    }
+
+    .hero-sub {
+      font-size: clamp(.9rem, 1.4vw, 1.1rem); color: var(--muted);
+      line-height: 1.85; max-width: 42ch; font-weight: 300;
+      animation: fadeUp .8s .2s ease both;
+    }
+    .hero-sub .highlight { color: var(--gold); font-style: italic; }
+    .hero-sub .green     { color: var(--green); font-weight: 400; }
+
+    /* ── TICKER ── */
+    .ticker-wrapper {
+      animation: fadeUp .8s .3s ease both;
+      overflow: hidden; position: relative;
+      padding: .85rem 0;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+    .ticker-wrapper::before,
+    .ticker-wrapper::after {
+      content: ''; position: absolute; top: 0; width: 80px; height: 100%; z-index: 2; pointer-events: none;
+    }
+    .ticker-wrapper::before { left:  0; background: linear-gradient(to right, var(--bg), transparent); }
+    .ticker-wrapper::after  { right: 0; background: linear-gradient(to left,  var(--bg), transparent); }
+
+    .ticker-track {
+      display: flex; width: max-content;
+      animation: tickerScroll 55s linear infinite;
+    }
+    .ticker-track:hover { animation-play-state: paused; }
+
+    @keyframes tickerScroll {
+      from { transform: translateX(0); }
+      to   { transform: translateX(-50%); }
+    }
+
+    .ticker-item {
+      display: inline-flex; align-items: center; gap: .45rem;
+      white-space: nowrap; padding: 0 1.6rem;
+      font-size: .8rem; color: var(--muted);
+    }
+    .ticker-item .sender {
+      font-family: 'Unbounded', sans-serif; font-size: .7rem; font-weight: 700; color: var(--text);
+    }
+    .ticker-item .amount {
+      color: var(--gold); font-family: 'Unbounded', sans-serif; font-size: .72rem; font-weight: 700;
+    }
+    .ticker-item .emoji { font-size: .95rem; }
+    .ticker-divider { color: var(--accent); font-size: .9rem; opacity: .5; padding: 0 .3rem; }
+
+    /* ── RIGHT ── */
+    .hero-right {
+      display: flex; justify-content: center; align-items: center;
+      animation: fadeIn .9s .25s ease both; position: relative;
+    }
+
+    /* RGB wrapper — sits outside the clipped frame */
+    .image-rgb-wrap {
+      position: relative;
+      width: min(420px, 100%);
+      border-radius: 2.6rem;
+      padding: 3px;                        /* border thickness */
+      background: conic-gradient(
+        from var(--rgb-angle, 0deg),
+        #ff0000, #ff7700, #ffff00,
+        #00ff00, #00ffff, #0077ff,
+        #7700ff, #ff00ff, #ff0000
+      );
+      animation: rgbSpin 3s linear infinite;
+      box-shadow:
+        0 0 22px 4px rgba(255,0,128,.35),
+        0 0 44px 8px rgba(0,200,255,.2),
+        0 0 70px 12px rgba(120,0,255,.15);
+    }
+
+    @property --rgb-angle {
+      syntax: '<angle>';
+      initial-value: 0deg;
+      inherits: false;
+    }
+
+    @keyframes rgbSpin {
+      to { --rgb-angle: 360deg; }
+    }
+
+    /* extra pulsing outer glow that also cycles hue */
+    .image-rgb-wrap::before {
+      content: '';
+      position: absolute;
+      inset: -6px;
+      border-radius: 2.9rem;
+      background: conic-gradient(
+        from var(--rgb-angle, 0deg),
+        #ff0000, #ff7700, #ffff00,
+        #00ff00, #00ffff, #0077ff,
+        #7700ff, #ff00ff, #ff0000
+      );
+      filter: blur(14px);
+      opacity: .55;
+      z-index: -1;
+      animation: rgbSpin 3s linear infinite;
+    }
+
+    .image-frame {
+      position: relative; width: 100%; aspect-ratio: 4/5;
+      border-radius: 2.4rem; overflow: hidden;
+      background: var(--surface);
+    }
+    .image-frame img { width: 100%; height: 100%; object-fit: cover; display: block; transition: transform .6s ease; }
+    .image-rgb-wrap:hover .image-frame img { transform: scale(1.03); }
+    .image-frame::after {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(160deg, rgba(123,92,250,.10) 0%, transparent 45%, rgba(0,0,0,.65) 100%);
+      pointer-events: none;
+    }
+
+    .img-card {
+      position: absolute; bottom: 1.5rem; left: 50%; transform: translateX(-50%);
+      z-index: 3; width: calc(100% - 3rem); padding: 1rem 1.25rem;
+      border-radius: 1.25rem; background: rgba(6,6,9,.78); backdrop-filter: blur(18px);
+      border: 1px solid var(--border); display: flex; align-items: center;
+      justify-content: space-between; gap: 1rem;
+    }
+    .img-card-name { font-family: 'Unbounded', sans-serif; font-size: .85rem; font-weight: 700; color: var(--text); }
+    .img-card-amount { display: flex; align-items: center; gap: .3rem; font-family: 'Unbounded', sans-serif; font-size: 1.2rem; font-weight: 700; color: var(--gold); }
+    .taka-icon { font-size: 1.1rem; color: var(--gold); line-height: 1; }
+
+    @keyframes countPop { 0%{transform:scale(1.3);opacity:.6} 100%{transform:scale(1);opacity:1} }
+    .pop { animation: countPop .35s ease both; }
+
+    .glow-ring {
+      position: absolute; border-radius: 50%; border: 1px solid;
+      animation: ringExpand 4s ease-out infinite; pointer-events: none;
+    }
+    .glow-ring:nth-child(1) { width:520px;height:520px;top:50%;left:50%;transform:translate(-50%,-50%);border-color:rgba(123,92,250,.13);animation-delay:0s; }
+    .glow-ring:nth-child(2) { width:660px;height:660px;top:50%;left:50%;transform:translate(-50%,-50%);border-color:rgba(224,92,250,.07);animation-delay:1.4s; }
+    @keyframes ringExpand { 0%{opacity:.6;transform:translate(-50%,-50%) scale(.85)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.15)} }
+
+    @keyframes fadeUp  { from{opacity:0;transform:translateY(28px)} to{opacity:1;transform:translateY(0)} }
+    @keyframes fadeIn  { from{opacity:0;transform:scale(.96)}        to{opacity:1;transform:scale(1)} }
+
+    /* ── MOBILE ── */
+    @media (max-width: 900px) {
+      nav { padding: 1.5rem; }
+      .hero-body { grid-template-columns:1fr; padding:0 1.5rem 2.5rem; gap:2.5rem; }
+      .hero-right { order:-1; }
+      .image-frame { aspect-ratio:3/2.8; border-radius:1.75rem; width:100%; }
+    }
+    @media (max-width: 480px) { .hero-heading { font-size: 2rem; } }
+  </style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<div class="noise"></div>
+
+<section class="hero">
+
+  <nav><div class="logo">EIDI</div></nav>
+
+  <div class="hero-body">
+
+    <!-- LEFT -->
+    <div class="hero-left">
+
+      <!-- CRESCENT MOON IMAGE — replace src with your own image -->
+      <div class="moon-img-wrap">
+        <img
+          src="2.jpg"
+          alt="Crescent Moon"
+          title="Replace with your own crescent moon image"
+        />
+      </div>
+
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Eid drop just landed 🚀
+      </div>
+
+      <h1 class="hero-heading">
+        <span class="line">Bro just send</span>
+        <span class="line gradient-word">the Eidi.</span>
+        <span class="line">No cap.</span>
+      </h1>
+
+      <p class="hero-sub">
+        Tumi ki janao?&nbsp;<span class="highlight">Eidi dile double Eidi paibe.</span><br/>
+        It's literally science. 🧪<br/>
+        Either way —&nbsp;<span class="green">just send it bestie.</span>&nbsp;💸✨
+      </p>
+
+      <!-- INFINITE TICKER -->
+      <div class="ticker-wrapper">
+        <div class="ticker-track" id="ticker-track"></div>
+      </div>
+
+    </div>
+
+    <!-- RIGHT -->
+    <div class="hero-right">
+      <div class="glow-ring"></div>
+      <div class="glow-ring"></div>
+
+      <div class="image-rgb-wrap">
+        <div class="image-frame">
+          <!--  Replace src with your QR image e.g. src="qr.png"  -->
+          
+          <img
+            src="1.jpg"
+            alt="EIDI — replace with your QR image"
+            loading="eager"
+          />
+          <div class="img-card">
+            <div><div class="img-card-name">Eidi</div></div>
+            <div class="img-card-amount">
+              <span class="taka-icon">৳</span>
+              <span id="taka-count">500</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<script>
+  /* ── BDT COUNTER (increases each refresh) ── */
+  const KEY = 'eidi_taka_count';
+  let stored = parseInt(localStorage.getItem(KEY), 10);
+  if (isNaN(stored)) stored = 500;
+  else stored += Math.floor(Math.random() * 50) + 10;
+  localStorage.setItem(KEY, stored);
+  const el = document.getElementById('taka-count');
+  el.textContent = stored.toLocaleString('en-IN');
+  setTimeout(() => {
+    el.classList.add('pop');
+    el.addEventListener('animationend', () => el.classList.remove('pop'), { once: true });
+  }, 900);
+
+  /* ── TICKER DATA ── */
+  const givers = [
+    { name:'Rahim Bhai',  amount:'৳500',    type:'Taka',    emoji:'💸' },
+    { name:'Sadia Apu',   amount:'৳1,000',  type:'Eidi',    emoji:'🤑' },
+    { name:'Jamal Uncle', amount:'৳200',    type:'Taka',    emoji:'😂' },
+    { name:'Mitu',        amount:'৳750',    type:'Eidi',    emoji:'🎉' },
+    { name:'Rafi',        amount:'৳100',    type:'Biscuit', emoji:'🍪' },
+    { name:'Nana Dadu',   amount:'৳5,000',  type:'Eidi',    emoji:'👴💰'},
+    { name:'Chacha Jan',  amount:'৳300',    type:'Taka',    emoji:'🕌' },
+    { name:'Priya Apa',   amount:'৳250',    type:'Eidi',    emoji:'🥰' },
+    { name:'Toufiq',      amount:'৳50',     type:'Taka',    emoji:'💀' },
+    { name:'Mama Bari',   amount:'৳2,000',  type:'Eidi',    emoji:'🎊' },
+    { name:'Shakib',      amount:'৳420',    type:'Taka',    emoji:'😏' },
+    { name:'Anonymous',   amount:'৳1',      type:'Taka',    emoji:'💔' },
+    { name:'Noor Vai',    amount:'৳600',    type:'Eidi',    emoji:'✨' },
+    { name:'Chottu',      amount:'৳999',    type:'Taka',    emoji:'🤭' },
+  ];
+
+  const buildItem = g =>
+    `<span class="ticker-item">
+      <span class="emoji">${g.emoji}</span>
+      <span class="sender">${g.name}</span>
+      <span style="font-size:.68rem">gave</span>
+      <span class="amount">${g.amount}</span>
+      <span style="font-size:.68rem;color:var(--accent2)">${g.type}</span>
+      <span class="ticker-divider">✦</span>
+    </span>`;
+
+  const track = document.getElementById('ticker-track');
+  const html  = givers.map(buildItem).join('');
+  track.innerHTML = html + html; // duplicate for seamless loop
+
+  /* ── CANVAS BACKGROUND ── */
+  const canvas = document.getElementById('bg-canvas');
+  const ctx    = canvas.getContext('2d');
+  let W, H;
+  const resize = () => { W = canvas.width = window.innerWidth; H = canvas.height = window.innerHeight; };
+  resize(); window.addEventListener('resize', resize);
+
+  const orbs = [
+    { x:.20, y:.30, r:.38, color:'123,92,250',  speed:.00012, angle:0   },
+    { x:.75, y:.60, r:.32, color:'224,92,250',  speed:.00009, angle:2.1 },
+    { x:.50, y:.85, r:.28, color:'80,160,250',  speed:.00015, angle:4.2 },
+  ];
+
+  const particles = Array.from({ length:60 }, () => ({
+    x:Math.random(), y:Math.random(),
+    size:Math.random()*1.5+.4,
+    vx:(Math.random()-.5)*.00015,
+    vy:(Math.random()-.5)*.00012,
+    opacity:Math.random()*.5+.1,
+  }));
+
+  const draw = () => {
+    ctx.clearRect(0,0,W,H);
+    orbs.forEach(o => {
+      o.angle += o.speed;
+      const cx=(o.x+Math.cos(o.angle)*.06)*W, cy=(o.y+Math.sin(o.angle*.7)*.08)*H, r=o.r*Math.min(W,H);
+      const g=ctx.createRadialGradient(cx,cy,0,cx,cy,r);
+      g.addColorStop(0, `rgba(${o.color},.12)`);
+      g.addColorStop(.5,`rgba(${o.color},.04)`);
+      g.addColorStop(1, `rgba(${o.color},0)`);
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fillStyle=g; ctx.fill();
+    });
+    particles.forEach(p => {
+      p.x+=p.vx; p.y+=p.vy;
+      if(p.x<0)p.x=1; if(p.x>1)p.x=0; if(p.y<0)p.y=1; if(p.y>1)p.y=0;
+      ctx.beginPath(); ctx.arc(p.x*W,p.y*H,p.size,0,Math.PI*2);
+      ctx.fillStyle=`rgba(180,170,255,${p.opacity})`; ctx.fill();
+    });
+    for(let i=0;i<particles.length;i++) for(let j=i+1;j<particles.length;j++){
+      const dx=particles[i].x-particles[j].x, dy=particles[i].y-particles[j].y, d=Math.sqrt(dx*dx+dy*dy);
+      if(d<.12){
+        ctx.beginPath();
+        ctx.moveTo(particles[i].x*W,particles[i].y*H);
+        ctx.lineTo(particles[j].x*W,particles[j].y*H);
+        ctx.strokeStyle=`rgba(160,140,255,${(1-d/.12)*.12})`; ctx.lineWidth=.6; ctx.stroke();
+      }
+    }
+    requestAnimationFrame(draw);
+  };
+  draw();
+</script>
+</body>
+</html>
